@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title>media controller</title>
+  </head>
+  <body>
+    <div>
+      <button onclick="play()">play</button>
+      <button onclick="pause()">pause</button>
+      <button onclick="reload()">reload</button><br>
+    </div>
+
+    <div id="song_list" style="padding-top:20px;">
+      <button id="template_button">template</button><br>
+    </div>
+
+    <script>
+//javascript here
+
+var songs = {}
+
+let socket = new WebSocket("ws://localhost:8000");
+socket.addEventListener("open", () =>{
+  socket.send("controller");
+});
+socket.addEventListener('message', function (event) {
+  //console.log(event.data);
+  songs = JSON.parse(event.data);
+  //console.dir(songs);
+  unpack_songs();
+});
+
+function play() {
+  socket.send("play");
+}
+
+function pause() {
+  socket.send("pause");
+}
+
+function reload() {
+  socket.send("load");
+}
+
+function change_song(song) {
+  socket.send(JSON.stringify(["change_song", song]));
+}
+
+function unpack_songs() {
+  let template_button = document.getElementById("template_button");
+  songs.songs.forEach(function(x) {
+    let new_button = template_button.cloneNode(true);
+    document.getElementById("song_list").appendChild(new_button);
+    document.getElementById("song_list").appendChild(document.createElement("br"));
+    new_button.innerHTML = x.name;
+    new_button.onclick = function() {
+      change_song(x.name);
+    }
+    //console.dir(x);
+  });
+}
+
+      </script>
+  </body>
+</html>

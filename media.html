@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="/master.css">
+  </head>
+  <body>
+    <div class="main">
+      Now playing:
+      <div class="song_name" id="song_name">
+        no song playing
+      </div>
+      <div class="artist_name" id="artist_name">
+        no song playing
+      </div>
+      <div class="progress">
+        <div id="progress"></div>
+      </div>
+      <audio autoplay id="audio_player"> <!--Audio is right here-->
+        <source id="audio_player_source" src="">
+      </audio>
+    </div>
+    <script>
+//javascript here
+let socket = new WebSocket("ws://localhost:8000");
+socket.addEventListener("open", () =>{
+  socket.send("obs_part");
+});
+socket.addEventListener('message', function (event) {
+    if (event.data == "play") {
+      document.getElementById("audio_player").play();
+    }
+    else if (event.data == "pause") {
+      document.getElementById("audio_player").pause();
+    }
+    else if (event.data == "load") {
+      document.getElementById("audio_player").load();
+    }
+    else {
+      //console.log(event.data);
+      update_display(JSON.parse(event.data));
+    }
+});
+
+function update_display(data) {
+  document.getElementById("song_name").innerHTML = data[1].name;
+  document.getElementById("artist_name").innerHTML = `by ${data[1].artist}`;
+  document.getElementById("audio_player_source").src = data[1].path;
+  document.getElementById("audio_player").load();
+}
+
+document.getElementById("audio_player").onended = function() {
+  document.getElementById("song_name").innerHTML = "no song playing";
+  document.getElementById("artist_name").innerHTML = "no song playing";
+  document.getElementById("audio_player_source").src = "";
+  document.getElementById("progress").bar.style.width = "0%"; //reset the progress bar
+}
+
+function update_bar() {
+  var audio = document.getElementById("audio_player");
+  var bar = document.getElementById("progress");
+
+  var one = audio.currentTime / audio.duration;
+  //console.dir(one);
+  var two = one * 100;
+  //console.dir(two);
+  var three = two.toString() + "%";
+  //console.dir(three);
+
+  bar.style.width = three;
+}
+
+setInterval(update_bar, 1000/5);
+
+    </script>
+  </body>
+</html>
